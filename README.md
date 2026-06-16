@@ -1,6 +1,6 @@
-# Note Harbor
+# MarkDownNotesHtml
 
-一个单文件 HTML 笔记应用，数据默认保存在浏览器 `localStorage` 中。
+Note Harbor 是一个单文件 HTML 笔记应用，数据默认保存在浏览器 `localStorage` 中。
 
 ## 功能
 
