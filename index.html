@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Note Harbor</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #627081;
+      --line: #d9e0e7;
+      --soft: #f4f7f9;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --accent-ink: #ffffff;
+      --amber: #b7791f;
+      --rose: #b42318;
+      --shadow: 0 18px 45px rgba(26, 38, 54, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #edf5f3 0%, #f7f3ee 38%, #f6f7f8 100%);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #0f766e;
+      color: white;
+      box-shadow: 0 10px 25px rgba(15, 118, 110, 0.22);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.25rem, 2vw, 1.75rem);
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 8px;
+      padding: 0 13px;
+      background: #e7ecef;
+      color: var(--ink);
+      border: 1px solid transparent;
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(23, 33, 43, 0.1);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border-color: var(--line);
+    }
+
+    .btn.danger {
+      background: #fce8e6;
+      color: var(--rose);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sidebar,
+    .editor {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(217, 224, 231, 0.86);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      min-height: calc(100vh - 124px);
+    }
+
+    .searchbox {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      padding: 10px 11px;
+      transition: border 140ms ease, box-shadow 140ms ease;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .note-list {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      max-height: calc(100vh - 284px);
+      overflow: auto;
+    }
+
+    .note-item {
+      text-align: left;
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .note-item.active {
+      border-color: var(--accent);
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+
+    .note-item .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .note-title {
+      font-weight: 800;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .note-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      background: #e6f4ef;
+      color: #0b5e57;
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 34px 18px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .editor-head {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 12px;
+    }
+
+    .editor-tools {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .switch {
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      min-width: 176px;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 3px;
+      background: #edf1f3;
+    }
+
+    .switch button {
+      border-radius: 6px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 800;
+    }
+
+    .switch button.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 4px 12px rgba(23, 33, 43, 0.1);
+    }
+
+    .editor-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      min-height: calc(100vh - 298px);
+    }
+
+    .content-area,
+    .preview {
+      width: 100%;
+      min-height: calc(100vh - 298px);
+      border: 0;
+      border-radius: 0;
+      resize: vertical;
+      padding: 18px;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .content-area {
+      background: #fff;
+    }
+
+    .preview {
+      background: #fbfcfc;
+      overflow: auto;
+    }
+
+    .preview h1,
+    .preview h2,
+    .preview h3 {
+      margin-top: 0.4em;
+      line-height: 1.2;
+    }
+
+    .preview code {
+      background: #e8eef0;
+      border-radius: 5px;
+      padding: 2px 5px;
+    }
+
+    .preview pre {
+      background: #17212b;
+      color: white;
+      border-radius: 8px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .statusbar {
+      padding: 11px 16px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      flex-wrap: wrap;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #17212b;
+      color: white;
+      padding: 12px 14px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      max-width: min(360px, calc(100vw - 40px));
+      z-index: 5;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        width: min(100% - 20px, 760px);
+        padding: 14px 0;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        min-height: 0;
+      }
+
+      .note-list {
+        max-height: 360px;
+      }
+
+      .filters {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-tools {
+        align-items: stretch;
+      }
+
+      .tool-group,
+      .switch {
+        width: 100%;
+      }
+
+      .tool-group .btn {
+        flex: 1 1 130px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Note Harbor</h1>
+          <p>本地优先的轻量笔记台</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="newNoteBtn" type="button" title="新建笔记">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          新建
+        </button>
+        <button class="btn ghost" id="exportBtn" type="button" title="导出 JSON">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          导出
+        </button>
+        <label class="btn ghost" for="importFile" title="导入 JSON">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+          导入
+        </label>
+        <input class="hidden" id="importFile" type="file" accept="application/json">
+      </div>
+    </header>
+
+    <section class="layout" aria-label="笔记工作区">
+      <aside class="sidebar">
+        <div class="searchbox">
+          <div class="field">
+            <label for="searchInput">搜索</label>
+            <input id="searchInput" type="search" placeholder="标题、正文或标签">
+          </div>
+          <div class="filters">
+            <div class="field">
+              <label for="tagFilter">标签</label>
+              <select id="tagFilter">
+                <option value="">全部标签</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="stateFilter">状态</label>
+              <select id="stateFilter">
+                <option value="active">当前</option>
+                <option value="archived">归档</option>
+                <option value="all">全部</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="note-list" id="noteList" aria-live="polite"></div>
+      </aside>
+
+      <section class="editor" aria-label="编辑器">
+        <div class="editor-head">
+          <div class="field">
+            <label for="titleInput">标题</label>
+            <input id="titleInput" type="text" placeholder="给这条笔记起个名字">
+          </div>
+          <div class="field">
+            <label for="tagsInput">标签</label>
+            <input id="tagsInput" type="text" placeholder="用逗号分隔，例如：工作, 灵感">
+          </div>
+          <div class="editor-tools">
+            <div class="switch" role="tablist" aria-label="编辑或预览">
+              <button class="active" id="editModeBtn" type="button">编辑</button>
+              <button id="previewModeBtn" type="button">预览</button>
+            </div>
+            <div class="tool-group">
+              <button class="btn ghost" id="pinBtn" type="button" title="置顶">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M5 17h14"/><path d="M17 3l4 4-5 5v3H8v-3L3 7l4-4 5 5 5-5z"/></svg>
+                置顶
+              </button>
+              <button class="btn ghost" id="archiveBtn" type="button" title="归档">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+                归档
+              </button>
+              <button class="btn danger" id="deleteBtn" type="button" title="删除">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-body">
+          <textarea id="contentInput" class="content-area" placeholder="写下想法。支持 # 标题、- 列表、**加粗**、`代码` 和链接。"></textarea>
+          <article id="previewPane" class="preview hidden"></article>
+        </div>
+        <div class="statusbar">
+          <span id="saveState">已保存</span>
+          <span id="noteStats">0 字 · 0 条笔记</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "note-harbor-notes-v1";
+    const $ = (selector) => document.querySelector(selector);
+    const nowIso = () => new Date().toISOString();
+    const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const els = {
+      noteList: $("#noteList"),
+      newNoteBtn: $("#newNoteBtn"),
+      exportBtn: $("#exportBtn"),
+      importFile: $("#importFile"),
+      searchInput: $("#searchInput"),
+      tagFilter: $("#tagFilter"),
+      stateFilter: $("#stateFilter"),
+      titleInput: $("#titleInput"),
+      tagsInput: $("#tagsInput"),
+      contentInput: $("#contentInput"),
+      editModeBtn: $("#editModeBtn"),
+      previewModeBtn: $("#previewModeBtn"),
+      previewPane: $("#previewPane"),
+      pinBtn: $("#pinBtn"),
+      archiveBtn: $("#archiveBtn"),
+      deleteBtn: $("#deleteBtn"),
+      saveState: $("#saveState"),
+      noteStats: $("#noteStats"),
+      toast: $("#toast")
+    };
+
+    let notes = loadNotes();
+    let activeId = notes[0]?.id || createNote("欢迎使用 Note Harbor", "这是一条示例笔记。\n\n- 写下想法\n- 用标签整理\n- 搜索、置顶、归档\n\n**所有数据只保存在本机浏览器。**", ["示例"]).id;
+    let mode = "edit";
+    let saveTimer;
+
+    function loadNotes() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      els.saveState.textContent = `已保存 ${new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}`;
+    }
+
+    function createNote(title = "未命名笔记", content = "", tags = []) {
+      const note = {
+        id: uid(),
+        title,
+        content,
+        tags,
+        pinned: false,
+        archived: false,
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      };
+      notes.unshift(note);
+      persist();
+      return note;
+    }
+
+    function activeNote() {
+      return notes.find((note) => note.id === activeId) || notes[0];
+    }
+
+    function cleanTags(value) {
+      return value
+        .split(/[,，]/)
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .filter((tag, index, arr) => arr.indexOf(tag) === index);
+    }
+
+    function filteredNotes() {
+      const query = els.searchInput.value.trim().toLowerCase();
+      const tag = els.tagFilter.value;
+      const state = els.stateFilter.value;
+      return notes
+        .filter((note) => {
+          const matchesState = state === "all" || (state === "archived" ? note.archived : !note.archived);
+          const matchesTag = !tag || note.tags.includes(tag);
+          const haystack = `${note.title} ${note.content} ${note.tags.join(" ")}`.toLowerCase();
+          const matchesQuery = !query || haystack.includes(query);
+          return matchesState && matchesTag && matchesQuery;
+        })
+        .sort((a, b) => Number(b.pinned) - Number(a.pinned) || new Date(b.updatedAt) - new Date(a.updatedAt));
+    }
+
+    function renderList() {
+      const list = filteredNotes();
+      els.noteList.innerHTML = "";
+      if (!list.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "没有匹配的笔记";
+        els.noteList.append(empty);
+        return;
+      }
+
+      list.forEach((note) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = `note-item${note.id === activeId ? " active" : ""}`;
+        item.dataset.id = note.id;
+
+        const titleRow = document.createElement("div");
+        titleRow.className = "row";
+        const title = document.createElement("div");
+        title.className = "note-title";
+        title.textContent = note.title || "未命名笔记";
+        const pin = document.createElement("span");
+        pin.textContent = note.pinned ? "置顶" : "";
+        pin.style.color = "var(--amber)";
+        pin.style.fontWeight = "800";
+        titleRow.append(title, pin);
+
+        const meta = document.createElement("div");
+        meta.className = "note-meta";
+        meta.textContent = new Date(note.updatedAt).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+        const tagRow = document.createElement("div");
+        tagRow.className = "note-meta";
+        note.tags.slice(0, 3).forEach((tag) => {
+          const chip = document.createElement("span");
+          chip.className = "tag";
+          chip.textContent = tag;
+          tagRow.append(chip);
+        });
+        if (note.archived) {
+          const chip = document.createElement("span");
+          chip.className = "tag";
+          chip.textContent = "已归档";
+          tagRow.append(chip);
+        }
+
+        item.append(titleRow, meta, tagRow);
+        item.addEventListener("click", () => {
+          activeId = note.id;
+          render();
+        });
+        els.noteList.append(item);
+      });
+    }
+
+    function renderTagFilter() {
+      const selected = els.tagFilter.value;
+      const tags = [...new Set(notes.flatMap((note) => note.tags))].sort((a, b) => a.localeCompare(b, "zh-CN"));
+      els.tagFilter.innerHTML = '<option value="">全部标签</option>';
+      tags.forEach((tag) => {
+        const option = document.createElement("option");
+        option.value = tag;
+        option.textContent = tag;
+        els.tagFilter.append(option);
+      });
+      if (tags.includes(selected)) {
+        els.tagFilter.value = selected;
+      }
+    }
+
+    function renderEditor() {
+      const note = activeNote();
+      if (!note) return;
+      activeId = note.id;
+      els.titleInput.value = note.title;
+      els.tagsInput.value = note.tags.join(", ");
+      els.contentInput.value = note.content;
+      els.pinBtn.classList.toggle("primary", note.pinned);
+      els.archiveBtn.textContent = note.archived ? "恢复" : "归档";
+      els.previewPane.innerHTML = markdownToHtml(note.content);
+      renderMode();
+      updateStats();
+    }
+
+    function renderMode() {
+      const previewing = mode === "preview";
+      els.contentInput.classList.toggle("hidden", previewing);
+      els.previewPane.classList.toggle("hidden", !previewing);
+      els.editModeBtn.classList.toggle("active", !previewing);
+      els.previewModeBtn.classList.toggle("active", previewing);
+      if (previewing) {
+        els.previewPane.innerHTML = markdownToHtml(activeNote()?.content || "");
+      }
+    }
+
+    function updateStats() {
+      const note = activeNote();
+      const count = note?.content.replace(/\s/g, "").length || 0;
+      els.noteStats.textContent = `${count} 字 · ${notes.length} 条笔记`;
+    }
+
+    function render() {
+      renderTagFilter();
+      renderList();
+      renderEditor();
+    }
+
+    function updateActive(patch) {
+      const note = activeNote();
+      if (!note) return;
+      Object.assign(note, patch, { updatedAt: nowIso() });
+      window.clearTimeout(saveTimer);
+      els.saveState.textContent = "正在保存...";
+      saveTimer = window.setTimeout(() => {
+        persist();
+        renderList();
+        renderTagFilter();
+        updateStats();
+      }, 180);
+    }
+
+    function markdownToHtml(markdown) {
+      const escaped = markdown
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      const lines = escaped.split("\n");
+      let html = "";
+      let inList = false;
+      let inCode = false;
+
+      lines.forEach((line) => {
+        if (line.trim().startsWith("```")) {
+          html += inCode ? "</code></pre>" : "<pre><code>";
+          inCode = !inCode;
+          return;
+        }
+        if (inCode) {
+          html += `${line}\n`;
+          return;
+        }
+        const parsed = inlineMarkdown(line.trim());
+        if (/^- /.test(line.trim())) {
+          if (!inList) {
+            html += "<ul>";
+            inList = true;
+          }
+          html += `<li>${inlineMarkdown(line.trim().slice(2))}</li>`;
+          return;
+        }
+        if (inList) {
+          html += "</ul>";
+          inList = false;
+        }
+        if (!line.trim()) {
+          html += "<br>";
+        } else if (line.startsWith("### ")) {
+          html += `<h3>${inlineMarkdown(line.slice(4))}</h3>`;
+        } else if (line.startsWith("## ")) {
+          html += `<h2>${inlineMarkdown(line.slice(3))}</h2>`;
+        } else if (line.startsWith("# ")) {
+          html += `<h1>${inlineMarkdown(line.slice(2))}</h1>`;
+        } else {
+          html += `<p>${parsed}</p>`;
+        }
+      });
+      if (inList) html += "</ul>";
+      if (inCode) html += "</code></pre>";
+      return html || "<p>预览会显示在这里。</p>";
+    }
+
+    function inlineMarkdown(text) {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      window.setTimeout(() => els.toast.classList.remove("show"), 1800);
+    }
+
+    els.newNoteBtn.addEventListener("click", () => {
+      const note = createNote();
+      activeId = note.id;
+      mode = "edit";
+      render();
+      els.titleInput.focus();
+      showToast("已新建笔记");
+    });
+
+    els.titleInput.addEventListener("input", () => updateActive({ title: els.titleInput.value }));
+    els.tagsInput.addEventListener("input", () => updateActive({ tags: cleanTags(els.tagsInput.value) }));
+    els.contentInput.addEventListener("input", () => updateActive({ content: els.contentInput.value }));
+
+    els.searchInput.addEventListener("input", renderList);
+    els.tagFilter.addEventListener("change", renderList);
+    els.stateFilter.addEventListener("change", renderList);
+
+    els.editModeBtn.addEventListener("click", () => {
+      mode = "edit";
+      renderMode();
+    });
+
+    els.previewModeBtn.addEventListener("click", () => {
+      mode = "preview";
+      renderMode();
+    });
+
+    els.pinBtn.addEventListener("click", () => {
+      const note = activeNote();
+      const nextPinned = !note.pinned;
+      updateActive({ pinned: nextPinned });
+      render();
+      showToast(nextPinned ? "已置顶" : "已取消置顶");
+    });
+
+    els.archiveBtn.addEventListener("click", () => {
+      const note = activeNote();
+      const nextArchived = !note.archived;
+      updateActive({ archived: nextArchived });
+      render();
+      showToast(nextArchived ? "已归档" : "已恢复");
+    });
+
+    els.deleteBtn.addEventListener("click", () => {
+      const note = activeNote();
+      if (!note) return;
+      const ok = window.confirm(`删除“${note.title || "未命名笔记"}”？`);
+      if (!ok) return;
+      notes = notes.filter((item) => item.id !== note.id);
+      if (!notes.length) createNote();
+      activeId = notes[0].id;
+      persist();
+      render();
+      showToast("已删除笔记");
+    });
+
+    els.exportBtn.addEventListener("click", () => {
+      const payload = JSON.stringify({ exportedAt: nowIso(), notes }, null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `note-harbor-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast("已导出 JSON");
+    });
+
+    els.importFile.addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        const imported = Array.isArray(data) ? data : data.notes;
+        if (!Array.isArray(imported)) throw new Error("Invalid notes file");
+        notes = imported.map((note) => ({
+          id: note.id || uid(),
+          title: note.title || "未命名笔记",
+          content: note.content || "",
+          tags: Array.isArray(note.tags) ? note.tags : [],
+          pinned: Boolean(note.pinned),
+          archived: Boolean(note.archived),
+          createdAt: note.createdAt || nowIso(),
+          updatedAt: note.updatedAt || nowIso()
+        }));
+        if (!notes.length) notes.push(createNote());
+        activeId = notes[0].id;
+        persist();
+        render();
+        showToast("导入完成");
+      } catch {
+        showToast("导入失败，请检查 JSON 文件");
+      } finally {
+        event.target.value = "";
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

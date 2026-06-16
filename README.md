@@ -13,4 +13,8 @@ Note Harbor 是一个单文件 HTML 笔记应用，数据默认保存在浏览�
 
 ## 使用
 
-直接打开 `outputs/index.html`，或用任意静态服务器托管该文件。
+直接打开根目录的 `index.html`，或用 GitHub Pages / 任意静态服务器托管本仓库。
+
+GitHub Pages 启用后，首页地址为：
+
+`https://vanessawws.github.io/MarkDownNotesHtml/`
